@@ -8,17 +8,29 @@ public class Server {
     protected String HostIP;
     protected int port;
     protected String fileName;
+    protected int BUFF_SIZE = 1024;
 
+    /*
+        This is the class constructor it needs the host ip and port
+    */
     Server(String hostIP, int port){
         this.HostIP = hostIP;
         this.port = port;
     }
 
+
+    /*
+        This function open the server and accept any client that connects to it and wait for the filename data that the client will send.
+        Then look at that file in the directory, if it exist then it will read that file by 1024 buffer then send it to the client
+
+        No return
+        
+        Note: try and catch are provide so any error will be handled.
+    */
     public void startServer(){
         try(
             ServerSocket serverSocket = new ServerSocket(port);
 			Socket clientSocket = serverSocket.accept();
-			// PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             BufferedOutputStream out = new BufferedOutputStream(clientSocket.getOutputStream(), 1024);
             
@@ -26,48 +38,25 @@ public class Server {
             String dataReceive;
             String fileName = "";
             dataReceive = in.readLine();
-            // System.out.println("Inside loop" + dataReceive);
             fileName = dataReceive;
-            // System.out.println(fileName);
 
+            // Try catch error if the file doesn't exist
+            try(
+                    BufferedInputStream file = new BufferedInputStream(new FileInputStream(fileName));
+            ){
 
-            BufferedInputStream file = new BufferedInputStream(new FileInputStream(fileName));
-            // System.out.print(file.read());
+                byte[] buffer = new byte[BUFF_SIZE];
+                int read = 0;
+                while ((read = file.read(buffer)) > 0) {
+                    System.out.println(read);   // To prove that it is sending by 1024
+                    out.write(buffer, 0, read);
+                }
+                out.flush();
 
-            byte[] buffer = new byte[1024];
-            int read = 0;
-            while((read = file.read(buffer)) > 0){
-                // file.read(buffer, 0, read);
-                System.out.print(buffer);
-                out.write(buffer, 0, read);
+            }catch (FileNotFoundException e){
+                System.err.println(e);
+                System.exit(-2);
             }
-            out.flush();
-            
-
-
-
-
-            // 1024 buffer byte array this is where binary will be store
-
-
-
-
-            // int bytesRead = 0;
-            // while((bytesRead = file.read(buffer)) != -1){
-            //     System.out.print("Tasdasdas");
-            //     file.read(buffer, 0, bytesRead);
-
-            //     out.write(buffer);
-            //     System.out.println(buffer);
-            // }
-            
-
-
-            //FileInputStream file = new FileInputStream(fileName);
-            // BufferedInputStream file = new BufferedInputStream(new FileInputStream(fileName));
-            // BufferedOutputStream write = new BufferedOutputStream(new FileOutputStream("test2.txt"));
-            // write.write(file.read(1024));
-            // write.flush();
 
         }catch(IOException e){
             System.err.println(e);
@@ -88,30 +77,6 @@ public class Server {
     public static void main(String args[]) {
         Server server1 = new Server("127.0.0.1", 12345);
         server1.startServer();
-        // try(
-        // BufferedInputStream file = new BufferedInputStream(new FileInputStream("test.txt"));
-        // ){
-        // // BufferedOutputStream write = new BufferedOutputStream(new FileOutputStream("test2.txt"));
-        // // write.write(file.read(1024));
-        // // write.flush();
-        // BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream("test2.txt"));
-        // // System.out.println(file.read());
-        //     byte[] buffer = new byte[1024];
 
-        //     int bytesRead = 0;
-        //     while((bytesRead = file.read(buffer)) != -1){
-        //         file.read(buffer, 0, bytesRead);
-        //         //System.out.println(buffer);
-        //         out.write(buffer);
-                
-        //     }
-        //     out.flush();
-            
-            
-            // out.close();
-            // System.out.println(file.read(buffer));
-            // while ((bytesRead = file.read(buffer)) != -1) {
-            //     System.out.println(new String(buffer, 0, bytesRead));
-            // }
     }
 }
